@@ -1,0 +1,15 @@
+{
+  "name": "bot-pixel-simulasi",
+  "version": "1.0.0",
+  "description": "Bot Puppeteer untuk menggambar pixel dari gambar PNG ke kanvas simulasi offline",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Nama Kamu",
+  "license": "MIT",
+  "dependencies": {
+    "jimp": "^0.22.10",
+    "puppeteer": "^22.6.0"
+  }
+}
