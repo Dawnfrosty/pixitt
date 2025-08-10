@@ -10,7 +10,7 @@
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 
-// gambar background putih
+// background putih
 ctx.fillStyle = "#FFFFFF";
 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -19,6 +19,13 @@ window.placePixel = function(x, y, color) {
   ctx.fillStyle = color;
   ctx.fillRect(x, y, 1, 1);
 };
+
+// fungsi baca warna pixel
+window.getPixelColor = function(x, y) {
+  const data = ctx.getImageData(x, y, 1, 1).data;
+  return `rgb(${data[0]},${data[1]},${data[2]})`;
+};
 </script>
 </body>
 </html>
+
