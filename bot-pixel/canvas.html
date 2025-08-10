@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Kanvas Dummy</title>
+</head>
+<body>
+<canvas id="board" width="50" height="50" style="border:1px solid black;"></canvas>
+<script>
+const canvas = document.getElementById('board');
+const ctx = canvas.getContext('2d');
+
+// gambar background putih
+ctx.fillStyle = "#FFFFFF";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+// fungsi menggambar pixel
+window.placePixel = function(x, y, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, 1, 1);
+};
+</script>
+</body>
+</html>
