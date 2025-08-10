@@ -1,21 +1,24 @@
-const puppeteer = require('puppeteer');
-const Jimp = require('jimp');
+const puppeteer = require("puppeteer");
+const Jimp = require("jimp");
+const express = require("express");
+const path = require("path");
 
-// palet warna Wplace contoh
+// ====== PALLET WARNA CONTOH ======
+// Ganti dengan palet Wplace jika mau
 const palette = [
-  {name: 'Red', r: 255, g: 0, b: 0},
-  {name: 'Green', r: 0, g: 255, b: 0},
-  {name: 'Blue', r: 0, g: 0, b: 255},
-  {name: 'Black', r: 0, g: 0, b: 0},
-  {name: 'White', r: 255, g: 255, b: 255}
+  { r: 255, g: 0, b: 0 },     // merah
+  { r: 0, g: 255, b: 0 },     // hijau
+  { r: 0, g: 0, b: 255 },     // biru
+  { r: 0, g: 0, b: 0 },       // hitam
+  { r: 255, g: 255, b: 255 }  // putih
 ];
 
-// fungsi cari warna terdekat
+// ====== FUNGSI CARI WARNA TERDEKAT ======
 function closestColor(r, g, b) {
   let best = palette[0];
   let minDist = Infinity;
   for (let c of palette) {
-    let dist = Math.sqrt((r-c.r)**2 + (g-c.g)**2 + (b-c.b)**2);
+    let dist = Math.sqrt((r - c.r) ** 2 + (g - c.g) ** 2 + (b - c.b) ** 2);
     if (dist < minDist) {
       minDist = dist;
       best = c;
@@ -25,30 +28,52 @@ function closestColor(r, g, b) {
 }
 
 (async () => {
-  // load gambar
-  const img = await Jimp.read('sketsa.png');
+  // ====== SERVE CANVAS.HTML ======
+  const app = express();
+  app.use(express.static(path.join(__dirname)));
+  const server = app.listen(3000, () => {
+    console.log("Server berjalan di http://localhost:3000/canvas.html");
+  });
+
+  // ====== BACA GAMBAR TARGET ======
+  const img = await Jimp.read("sketsa.png");
   const width = img.bitmap.width;
   const height = img.bitmap.height;
 
-  const browser = await puppeteer.launch({ headless: false });
+  // ====== JALANKAN PUPPETEER ======
+  const browser = await puppeteer.launch({
+    headless: true, // di Replit biasanya cuma bisa headless
+    args: ["--no-sandbox", "--disable-setuid-sandbox"]
+  });
   const page = await browser.newPage();
+  await page.goto("http://localhost:3000/canvas.html");
 
-  // buka canvas dummy lokal
-  await page.goto(`file://${__dirname}/canvas.html`);
-
-  // loop semua pixel
+  // Loop semua pixel
+  let totalPixels = width * height;
+  let painted = 0;
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const color = img.getPixelColor(x, y);
       const { r, g, b } = Jimp.intToRGBA(color);
-      const closest = closestColor(r, g, b);
+      const targetColor = closestColor(r, g, b);
 
-      // panggil fungsi placePixel di canvas.html
-      await page.evaluate((x, y, color) => {
-        window.placePixel(x, y, color);
-      }, x, y, closest);
+      // Ambil warna yang ada di kanvas sekarang
+      const currentColor = await page.evaluate((x, y) => {
+        return window.getPixelColor(x, y);
+      }, x, y);
+
+      // Hanya menggambar kalau warna berbeda
+      if (currentColor !== targetColor) {
+        await page.evaluate((x, y, color) => {
+          window.placePixel(x, y, color);
+        }, x, y, targetColor);
+        painted++;
+      }
     }
   }
 
-  console.log('Gambar selesai digambar di kanvas dummy!');
+  console.log(`Selesai! Total pixel digambar: ${painted} dari ${totalPixels}`);
+  await browser.close();
+  server.close();
 })();
+
